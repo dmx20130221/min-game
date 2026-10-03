@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>民国人生模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #222;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            min-height:100vh;
+        }
+        .title {
+            text-align:center;
+            font-size:26px;
+            margin:20px 0;
+            color:#333;
+        }
+        .status-wrap{
+            background:#fff;
+            border-radius:14px;
+            padding:16px;
+            box-shadow:0 2px 8px #00000012;
+            margin-bottom:20px;
+        }
+        .stat-item{
+            margin:10px 0;
+        }
+        .stat-name{
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:4px;
+        }
+        .bar-bg{
+            height:14px;
+            background:#e9ecef;
+            border-radius:99px;
+            overflow:hidden;
+        }
+        .bar-fill{
+            height:100%;
+            transition:0.3s ease;
+        }
+        .fame{background:#f5b041;}
+        .power{background:#e74c3c;}
+        .people{background:#3498db;}
+        .clique{background:#9b59b6;}
+        .story-box{
+            background:#ffffff;
+            border-radius:14px;
+            padding:20px;
+            box-shadow:0 2px 8px #00000012;
+            margin-bottom:20px;
+            line-height:1.7;
+            font-size:16px;
+        }
+        .btn{
+            width:100%;
+            padding:16px;
+            margin:8px 0;
+            border:none;
+            border-radius:12px;
+            background:#ffffff;
+            box-shadow:0 2px 6px #00000010;
+            font-size:16px;
+            text-align:left;
+            cursor:pointer;
+        }
+        .btn:active{
+            background:#eef2f7;
+        }
+        .end-text{
+            text-align:center;
+            font-size:18px;
+            color:#c0392b;
+            font-weight:bold;
+            margin-top:15px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">民国人生模拟器</h1>
+    <div class="status-wrap">
+        <div class="stat-item">
+            <div class="stat-name"><span>声望</span><span id="fame-num">20</span></div>
+            <div class="bar-bg"><div class="bar-fill fame" id="fame-bar" style="width:20%"></div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-name"><span>兵权</span><span id="power-num">15</span></div>
+            <div class="bar-bg"><div class="bar-fill power" id="power-bar" style="width:15%"></div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-name"><span>民心</span><span id="people-num">10</span></div>
+            <div class="bar-bg"><div class="bar-fill people" id="people-bar" style="width:10%"></div></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-name"><span>派系</span><span id="clique-num">30</span></div>
+            <div class="bar-bg"><div class="bar-fill clique" id="clique-bar" style="width:30%"></div></div>
+        </div>
+    </div>
+    <div class="story-box" id="story">
+        1911年，辛亥革命爆发。你正在日本军校求学，国内革命风起云涌。有人劝你即刻归国建功，也有人劝你学成再归、厚积薄发。你将如何选择？
+    </div>
+    <div id="btn-group"></div>
+    <div class="end-text" id="end"></div>
+
+<script>
+let stat = {
+    fame:20,
+    power:15,
+    people:10,
+    clique:30
+};
+const storyData = [
+    {
+        text:"1911年，辛亥革命爆发。你正在日本军校求学，国内革命风起云涌。有人劝你即刻归国建功，也有人劝你学成再归、厚积薄发。你将如何选择？",
+        options:[
+            {text:"1.立刻回国投身革命",delta:{fame:+8,power:+5,people:+3,clique:+2},next:1},
+            {text:"2.完成学业，静观时局",delta:{fame:+3,power:+8,people:0,clique:+5},next:2}
+        ]
+    },
+    {
+        text:"你毅然归国，投身沪上革命，积极站队革命阵营。年轻果敢的姿态让你获得党内前辈注意，但根基尚浅、缺乏兵权。",
+        options:[
+            {text:"1.依附陈其美，深耕党内",delta:{fame:+10,clique:+12,power:+3,people:0},next:3},
+            {text:"2.独自闯荡，积累基层声望",delta:{fame:+6,people:+10,clique:-5,power:0},next:4}
+        ]
+    },
+    {
+        text:"你选择留日完成学业，眼界、军事理论大幅提升。虽错失早期革命声望，但为日后掌兵埋下扎实基础。",
+        options:[
+            {text:"1.结业后即刻投奔南方革命政府",delta:{fame:+5,power:+10,clique:+8,people:0},next:3},
+            {text:"2.观望南北局势，择强而栖",delta:{clique:+10,power:+5,people:-3,fame:0},next:4}
+        ]
+    },
+    {
+        text:"你成功进入国民党核心圈层，搭上元老派系快车，开始接触军政实权，正式迈入民国权力棋局。",
+        options:[
+            {text:"1.专注练兵，掌握嫡系武装",delta:{power:+15,clique:+5,people:-3,fame:0},next:5},
+            {text:"2.专注党务，扩张政治人脉",delta:{fame:+12,clique:+10,power:+3,people:0},next:6}
+        ]
+    },
+    {
+        text:"你选择独立发展，不绑定单一派系。声望温和上涨，但在党内根基松散，派系支持不足。",
+        options:[
+            {text:"1.主动靠拢主流派系求发展",delta:{clique:+12,fame:+5,people:0,power:0},next:5},
+            {text:"2.坚持独立路线",delta:{clique:-8,people:+8,power:+5,fame:0},next:6}
+        ]
+    },
+    {
+        text:"多年经营，你手握嫡系军队，军权稳步攀升，成为南方不可忽视的军事力量。北伐前夜，局势巨变。",
+        options:[
+            {text:"1.积极主战，支持北伐统一",delta:{fame:+15,people:+10,power:+8,clique:0},next:7},
+            {text:"2.保存实力，谨慎观望",delta:{power:+10,fame:-5,people:-5,clique:0},next:8}
+        ]
+    },
+    {
+        text:"你人脉遍布朝野，政治声望日盛，在党内话语权持续提高，距离最高权力越来越近。",
+        options:[
+            {text:"1.借力局势，夺权上位",delta:{clique:+15,fame:+10,people:-8,power:0},next:7},
+            {text:"2.稳中求进，循序渐进",delta:{fame:+8,people:+5,clique:+8,power:0},next:8}
+        ]
+    },
+    {
+        text:"北伐轰轰烈烈，你立下赫赫军功，声望、兵权达到人生高峰，成功登顶国民政府核心。但内部派系林立、外敌环伺，危机四伏。",
+        options:[
+            {text:"1.清党整肃，巩固独裁统治",delta:{power:+12,clique:+15,people:-20,fame:0},next:9},
+            {text:"2.包容各派，谋求团结治国",delta:{people:+12,clique:-10,fame:+8,power:0},next:10}
+        ]
+    },
+    {
+        text:"你选择保守观望，虽保全实力，却错失时代大势。党内声望停滞，逐渐被新生代将领超越。",
+        options:[
+            {text:"1.后期主动出击挽回局势",delta:{fame:+5,power:+5,people:0,clique:0},next:9},
+            {text:"2.继续佛系守成",delta:{fame:-8,clique:-5,people:0,power:0},next:10}
+        ]
+    },
+    {
+        text:"你以铁血手段整合党政军，彻底掌握最高权力，成为民国实际掌权者。但民心大幅流失，社会矛盾急剧激化。中日矛盾、国内矛盾双重压顶。",
+        options:[
+            {text:"1.优先攘外，坚决抗日",delta:{people:+15,fame:+10,power:+5,clique:0},next:11},
+            {text:"2.优先安内，先统一再御外",delta:{clique:+10,people:-15,fame:-5,power:0},next:12}
+        ]
+    },
+    {
+        text:"你采取温和执政路线，各方派系相对平衡，民生略有缓和，但中央权力松散、控制力不足，乱世之下难以集权强国。",
+        options:[
+            {text:"1.收拢权力，加强中央集权",delta:{power:+10,clique:+8,people:-5,fame:0},next:11},
+            {text:"2.维持平衡格局",delta:{people:+8,fame:+5,clique:0,power:0},next:12}
+        ]
+    },
+    {
+        text:"你坚持抗日国策，举国抗战，民族声望达到顶点。历经八年苦战，赢得抗战胜利，名留史册。战后局势再次来到十字路口。",
+        options:[
+            {text:"1.和平谈判，谋求共治",delta:{people:+15,fame:+10,clique:-8,power:0},next:13},
+            {text:"2.武力统一，彻底肃清对手",delta:{power:+12,clique:+10,people:-18,fame:0},next:14}
+        ]
+    },
+    {
+        text:"你坚持先安内后攘外的策略，虽稳住内部派系，但错失民心舆论，民族争议缠身，历史评价两极分化严重。",
+        options:[
+            {text:"1.战后全力争取民心改革",delta:{people:+12,fame:+5,clique:0,power:0},next:13},
+            {text:"2.延续旧有统治模式",delta:{people:-12,clique:+8,fame:0,power:0},next:14}
+        ]
+    },
+    {
+        text:"你选择和平路线，国内局势短暂缓和，但派系掣肘严重、改革积重难返。\n【温和执政结局】半生权柄起落，功过参半，乱世之中未能完成真正长治久安。",
+        options:[]
+    },
+    {
+        text:"你坚持武力统一、高压统治，民心彻底崩塌，大势已去。最终兵败退守海岛，形成两岸分隔格局。\n【历史正统结局】近代最具争议的民国执政者，功过留待后人评说。",
+        options:[]
+    }
+]
+
+function updateUI(){
+    // 强制转数字，防止NaN
+    stat.fame = Number(stat.fame);
+    stat.power = Number(stat.power);
+    stat.people = Number(stat.people);
+    stat.clique = Number(stat.clique);
+
+    // 限制0~100
+    stat.fame = Math.max(0,Math.min(100,stat.fame));
+    stat.power = Math.max(0,Math.min(100,stat.power));
+    stat.people = Math.max(0,Math.min(100,stat.people));
+    stat.clique = Math.max(0,Math.min(100,stat.clique));
+
+    document.getElementById("fame-num").innerText = stat.fame;
+    document.getElementById("power-num").innerText = stat.power;
+    document.getElementById("people-num").innerText = stat.people;
+    document.getElementById("clique-num").innerText = stat.clique;
+
+    document.getElementById("fame-bar").style.width = stat.fame + "%";
+    document.getElementById("power-bar").style.width = stat.power + "%";
+    document.getElementById("people-bar").style.width = stat.people + "%";
+    document.getElementById("clique-bar").style.width = stat.clique + "%";
+}
+
+function loadScene(id){
+    const scene = storyData[id];
+    document.getElementById("story").innerText = scene.text;
+    const btnWrap = document.getElementById("btn-group");
+    btnWrap.innerHTML = "";
+    document.getElementById("end").innerText = "";
+
+    if(scene.options.length === 0){
+        document.getElementById("end").innerText = "游戏结束";
+        return;
+    }
+    scene.options.forEach(opt=>{
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.innerText = opt.text;
+        btn.onclick = ()=>{
+            stat.fame += opt.delta.fame;
+            stat.power += opt.delta.power;
+            stat.people += opt.delta.people;
+            stat.clique += opt.delta.clique;
+            updateUI();
+            loadScene(opt.next);
+        }
+        btnWrap.appendChild(btn);
+    })
+}
+
+updateUI();
+loadScene(0);
+</script>
+</body>
+</html>
